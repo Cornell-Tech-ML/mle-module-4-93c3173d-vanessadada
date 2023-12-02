@@ -4,7 +4,7 @@ from . import operators
 from .autodiff import Context
 from .fast_ops import FastOps
 from .tensor import Tensor
-from .tensor_functions import Function, rand, tensor
+from .tensor_functions import Function, rand
 
 
 def tile(input: Tensor, kernel: Tuple[int, int]) -> Tuple[Tensor, int, int]:
@@ -86,7 +86,7 @@ class Max(Function):
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
         "Backward of max should be argmax (see above)"
         # TODO: Implement for Task 4.4.
-        input, dim = ctx.saved_values;
+        input, dim = ctx.saved_values
         return argmax(input, dim) * grad_output, 0.0
 
 
@@ -148,7 +148,6 @@ def maxpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
     output, new_height, new_width = tile(input, kernel)
     output = max(output, 4)
     return output.view(batch, channel, new_height, new_width)
-
 
 
 def dropout(input: Tensor, rate: float, ignore: bool = False) -> Tensor:

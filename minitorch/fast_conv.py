@@ -6,8 +6,6 @@ from numba import njit, prange
 from .autodiff import Context
 from .tensor import Tensor
 from .tensor_data import (
-    MAX_DIMS,
-    Index,
     Shape,
     Strides,
     broadcast_index,
@@ -82,7 +80,7 @@ def _tensor_conv1d(
 
     # TODO: Implement for Task 4.1.
     for i in prange(out_size):
-        cur_val = 0
+        cur_val = 0.0
         out_index = np.empty(len(out_shape), np.int32)
         weight_index = np.empty(3, np.int32)
         input_index = np.empty(3, np.int32)
@@ -108,6 +106,7 @@ def _tensor_conv1d(
         out[i] = cur_val
 
 tensor_conv1d = njit(parallel=True)(_tensor_conv1d)
+
 
 
 class Conv1dFun(Function):
@@ -231,7 +230,7 @@ def _tensor_conv2d(
 
     # TODO: Implement for Task 4.2.
     for i in prange(out_size):
-        cur_val = 0
+        cur_val = 0.0
         out_index = np.empty(len(out_shape), np.int32)
         to_index(i, out_shape, out_index)
         temp_batch, temp_channels, temp_height, temp_width = out_index
