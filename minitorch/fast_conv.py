@@ -6,8 +6,6 @@ from numba import njit, prange
 from .autodiff import Context
 from .tensor import Tensor
 from .tensor_data import (
-    MAX_DIMS,
-    Index,
     Shape,
     Strides,
     broadcast_index,
@@ -81,10 +79,34 @@ def _tensor_conv1d(
     s2 = weight_strides
 
     # TODO: Implement for Task 4.1.
-    raise NotImplementedError("Need to implement for Task 4.1")
+    for i in prange(out_size):
+        cur_val = 0.0
+        out_index = np.empty(len(out_shape), np.int32)
+        weight_index = np.empty(3, np.int32)
+        input_index = np.empty(3, np.int32)
+        to_index(i, out_shape, out_index)
+        temp_batch, temp_channels, temp_width = out_index
+        for j in prange(in_channels):
+            for w in prange(kw):
+                if reverse:
+                    new_width = temp_width - w
+                else:
+                    new_width = temp_width + w
 
+                weight_index[0] = temp_channels
+                weight_index[1] = j
+                weight_index[2] = w
+                weight_pos = index_to_position(weight_index, s2)
+                input_index[0] = temp_batch
+                input_index[1] = j
+                input_index[2] = new_width
+                input_pos = index_to_position(input_index, s1)
+                if (reverse and new_width >= 0) or (not reverse and new_width < width):
+                    cur_val += input[input_pos] * weight[weight_pos]
+        out[i] = cur_val
 
 tensor_conv1d = njit(parallel=True)(_tensor_conv1d)
+
 
 
 class Conv1dFun(Function):
@@ -207,7 +229,26 @@ def _tensor_conv2d(
     s20, s21, s22, s23 = s2[0], s2[1], s2[2], s2[3]
 
     # TODO: Implement for Task 4.2.
-    raise NotImplementedError("Need to implement for Task 4.2")
+    for i in prange(out_size):
+        cur_val = 0.0
+        out_index = np.empty(len(out_shape), np.int32)
+        to_index(i, out_shape, out_index)
+        temp_batch, temp_channels, temp_height, temp_width = out_index
+        for j in prange(in_channels):
+            for h in prange(kh):
+                for w in prange(kw):
+                    if reverse:
+                        new_height = temp_height - h
+                        new_width = temp_width - w
+                    else:
+                        new_height = temp_height + h
+                        new_width = temp_width + w
+
+                    weight_pos = temp_channels * s20 + j * s21 + h * s22 + w * s23
+                    input_pos = temp_batch * s10 + j * s11 + new_height * s12 + new_width * s13
+                    if (reverse and new_width >= 0 and new_height >= 0) or (not reverse and new_width < width and new_height < height):
+                        cur_val += input[input_pos] * weight[weight_pos]
+        out[i] = cur_val
 
 
 tensor_conv2d = njit(parallel=True, fastmath=True)(_tensor_conv2d)
