@@ -8,9 +8,11 @@ import minitorch
 
 
 class Network(minitorch.Module):
-    def __init__(self, hidden_layers):
+    def _init_(self, hidden_layers):
         super().__init__()
-        raise NotImplementedError("Need to include this file from past assignment.")
+        self.layer1 = Linear(2, hidden_layers)
+        self.layer2 = Linear(hidden_layers, hidden_layers)
+        self.layer3 = Linear(hidden_layers, 1)
 
     def forward(self, x):
         middle = [h.relu() for h in self.layer1.forward(x)]
@@ -19,13 +21,13 @@ class Network(minitorch.Module):
 
 
 class Linear(minitorch.Module):
-    def __init__(self, in_size, out_size):
+    def _init_(self, in_size, out_size):
         super().__init__()
         self.weights = []
         self.bias = []
-        for i in range(in_size):
+        for i in range(in_size):  # 784
             self.weights.append([])
-            for j in range(out_size):
+            for j in range(out_size):  # 10
                 self.weights[i].append(
                     self.add_parameter(
                         f"weight_{i}_{j}", minitorch.Scalar(2 * (random.random() - 0.5))
@@ -39,7 +41,19 @@ class Linear(minitorch.Module):
             )
 
     def forward(self, inputs):
-        raise NotImplementedError("Need to include this file from past assignment.")
+        inputs = [[x for x in inputs]]
+
+        res = []
+        for i in range(len(inputs)):
+            res.append([])
+            for k in range(len(self.bias)):
+                ele = minitorch.Scalar(0)
+                for j in range(len(inputs[i])):
+                    ele += inputs[i][j] * self.weights[j][k].value
+                ele += self.bias[k].value
+                res[i].append(ele)
+
+        return res[0]
 
 
 def default_log_fn(epoch, total_loss, correct, losses):
@@ -47,7 +61,7 @@ def default_log_fn(epoch, total_loss, correct, losses):
 
 
 class ScalarTrain:
-    def __init__(self, hidden_layers):
+    def _init_(self, hidden_layers):
         self.hidden_layers = hidden_layers
         self.model = Network(self.hidden_layers)
 
@@ -99,7 +113,7 @@ class ScalarTrain:
 
 if __name__ == "__main__":
     PTS = 50
-    HIDDEN = 2
+    HIDDEN = 8
     RATE = 0.5
     data = minitorch.datasets["Simple"](PTS)
     ScalarTrain(HIDDEN).train(data, RATE)
